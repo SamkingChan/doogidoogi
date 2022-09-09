@@ -1,7 +1,9 @@
 package com.sexychan.doogidoogi.utils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -21,13 +23,17 @@ import java.awt.event.*;
 public class SwingGUI {
 
     @Resource
+    PropertiesConfiguration propertiesConfiguration;
+    @Resource
     @Lazy
     MidiUtils midiUtils;
-
     JPanel panel;
     JFrame frame;
     @Value("${midi.device}")
     String device = "USB Midi";
+
+    JTextArea textArea;
+
 
     public void createAndShowGUI() {
         try {
@@ -40,7 +46,7 @@ public class SwingGUI {
             panel = new JPanel();
 
             //设置窗口大小
-            frame.setSize(350, 150);
+            frame.setSize(360, 150 + 60);
 
             //下边的这句话，如果这么写的话，窗口关闭，springboot项目就会关掉，使用dispose则不会
             //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -49,9 +55,9 @@ public class SwingGUI {
             panel.setLayout(null);
 
             // 创建 JLabel
-            JLabel startLabel = new JLabel("程序正在加载中...");
-            startLabel.setBounds(10, 20, 120, 25);
-            panel.add(startLabel);
+//            JLabel startLabel = new JLabel("程序正在加载中...");
+//            startLabel.setBounds(10, 20, 120, 25);
+//            panel.add(startLabel);
             // 添加面板
             frame.add(panel);
 
@@ -124,6 +130,30 @@ public class SwingGUI {
         }
     }
 
+    public JTextArea createTextArea() {
+        textArea = new JTextArea();
+        textArea.setBounds(10, 10, 330, 50);
+        textArea.setVisible(true);
+        textArea.setLineWrap(true);
+        textArea.setEditable(false);
+        textArea.setFont(new Font("宋体", Font.PLAIN, 12));
+        textArea.append("欢迎使用超级架子鼓IO板虚拟程序！\n");
+
+
+//        JScrollPane scroll=new JScrollPane(textArea);
+//        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+//        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+//        scroll.setVisible(true);
+        panel.add(textArea);
+        frame.repaint();
+        return textArea;
+    }
+
+    public void appendText(String text) {
+        textArea.append(text + "\n");
+        textArea.selectAll();
+    }
+
     public void placeComponents(JPanel panel) {
 
         /* 布局部分我们这边不多做介绍
@@ -137,14 +167,14 @@ public class SwingGUI {
          * setBounds(x, y, width, height)
          * x 和 y 指定左上角的新位置，由 width 和 height 指定新的大小。
          */
-        userLabel.setBounds(10, 20, 120, 25);
+        userLabel.setBounds(10, 20 + 60, 120, 25);
         panel.add(userLabel);
 
         /*
          * 创建文本域用于用户输入
          */
         JTextField midiPortText = new JTextField(20);
-        midiPortText.setBounds(140, 20, 165, 25);
+        midiPortText.setBounds(140, 20 + 60, 165, 25);
         midiPortText.setText(device);
         panel.add(midiPortText);
 
@@ -163,11 +193,11 @@ public class SwingGUI {
 
         // 创建登录按钮
         JButton connect = new JButton("连接");
-        connect.setBounds(85, 65, 80, 25);
+        connect.setBounds(85, 65 + 60, 80, 25);
         panel.add(connect);
 
         JButton disconnect = new JButton("断开");
-        disconnect.setBounds(185, 65, 80, 25);
+        disconnect.setBounds(185, 65 + 60, 80, 25);
         disconnect.setEnabled(false);
         panel.add(disconnect);
 
@@ -176,15 +206,16 @@ public class SwingGUI {
             public void actionPerformed(ActionEvent e) {
                 String midiPort = midiPortText.getText().trim();
                 if (StringUtils.isBlank(midiPort)) {
-                    JOptionPane.showMessageDialog(null, "请输入MIDI设备名称！","提示", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "请输入MIDI设备名称！", "提示", JOptionPane.INFORMATION_MESSAGE);
                 } else {
+                    propertiesConfiguration.setProperty("midi.device", midiPort);
                     midiUtils.setDevice(midiPort);
                     ResultApi resultApi = midiUtils.openMidiDevice();
-                    if(resultApi.getCode().equals(1)){
+                    if (resultApi.getCode().equals(1)) {
                         connect.setEnabled(false);
                         disconnect.setEnabled(true);
                     }
-                    JOptionPane.showMessageDialog(null, resultApi.getMessage(),"提示", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(null, resultApi.getMessage(), "提示", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
         });
@@ -201,5 +232,9 @@ public class SwingGUI {
 
     public JFrame getFrame() {
         return frame;
+    }
+
+    public JTextArea getTextArea() {
+        return textArea;
     }
 }

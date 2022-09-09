@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.sound.midi.*;
+import javax.swing.*;
 import java.io.OutputStream;
 import java.util.Arrays;
 
@@ -26,11 +27,19 @@ public class MidiUtils {
     @Resource
     SerialTools serialTools;
 
+    @Resource
+    SwingGUI swingGUI;
+
+    JTextArea textArea;
+
     private OutputStream outputStream;
 
     public ResultApi openMidiDevice() {
+        textArea = swingGUI.getTextArea();
+        swingGUI.appendText("查找MIDI设备中....");
         log.info("查找MIDI设备中....");
         for (MidiDevice.Info info : MidiSystem.getMidiDeviceInfo()) {
+            swingGUI.appendText("设定的设备名称为：" + device + ",找到的设备名称为：" + info.getName());
             log.info("设定的设备名称为：" + device + ",找到的设备名称为：" + info.getName());
             String trim = info.getName().toString().trim();
             log.info("设定的设备：" + device + "与找到的设备" + trim + "匹配结果：" + trim.equals(device));
@@ -41,6 +50,7 @@ public class MidiUtils {
                     midiDevice.open();
                     Transmitter transmitter = midiDevice.getTransmitter();
                     transmitter.setReceiver(new MidiInputReceiver());
+                    swingGUI.appendText("MIDI设备：" + device + " 连接成功！");
                     log.info("MIDI设备：" + device + " 连接成功！");
                     if (outputStream == null) {
                         outputStream = serialTools.getOutputStream();
@@ -48,10 +58,12 @@ public class MidiUtils {
                     return new ResultApi(1, "MIDI设备：" + device + " 连接成功！");
                 } catch (MidiUnavailableException e) {
                     e.printStackTrace();
+                    swingGUI.appendText("设备连接异常，请重新连接！");
                     log.info("设备连接异常，请重新连接！");
                     return new ResultApi(-1, "设备连接异常，请重新连接！");
                 }
             } else {
+                swingGUI.appendText("设定的设备：" + device + " 与找到的设备：" + info.getName() + " 不匹配！");
                 log.info("设定的设备：" + device + " 与找到的设备：" + info.getName() + " 不匹配！");
             }
         }
@@ -68,11 +80,15 @@ public class MidiUtils {
         @Override
         public void send(MidiMessage msg, long timeStamp) {
             try {
+                if (textArea == null) {
+                    textArea = swingGUI.getTextArea();
+                }
                 byte[] aMsg = msg.getMessage();
                 if (aMsg[0] != -2) {
                     log.info(Arrays.toString(aMsg));
                     if (aMsg[2] > 0 && aMsg[2] != 64) {
                         byte b = aMsg[1];
+                        swingGUI.appendText("侦测到的MIDI信号：" + b);
                         log.info("侦测到的MIDI信号：" + b);
                         switch (b) {
                             case 36:
