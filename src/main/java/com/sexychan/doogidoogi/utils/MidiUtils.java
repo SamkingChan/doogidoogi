@@ -30,12 +30,9 @@ public class MidiUtils {
     @Resource
     SwingGUI swingGUI;
 
-    JTextArea textArea;
-
     private OutputStream outputStream;
 
     public ResultApi openMidiDevice() {
-        textArea = swingGUI.getTextArea();
         swingGUI.appendText("查找MIDI设备中....");
         log.info("查找MIDI设备中....");
         for (MidiDevice.Info info : MidiSystem.getMidiDeviceInfo()) {
@@ -73,6 +70,8 @@ public class MidiUtils {
     public void closeMidi() {
         if (midiDevice != null && midiDevice.isOpen()) {
             midiDevice.close();
+            swingGUI.appendText("MIDI设备已断开");
+            log.info("MIDI设备已断开");
         }
     }
 
@@ -80,9 +79,6 @@ public class MidiUtils {
         @Override
         public void send(MidiMessage msg, long timeStamp) {
             try {
-                if (textArea == null) {
-                    textArea = swingGUI.getTextArea();
-                }
                 byte[] aMsg = msg.getMessage();
                 if (aMsg[0] != -2) {
                     log.info(Arrays.toString(aMsg));

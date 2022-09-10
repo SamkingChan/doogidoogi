@@ -13,6 +13,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import static java.awt.Component.RIGHT_ALIGNMENT;
+
 /**
  * @Author: SexyChan
  * @description:
@@ -34,6 +36,9 @@ public class SwingGUI {
 
     JTextArea textArea;
 
+    JButton connect;
+    JScrollPane scroll;
+
 
     public void createAndShowGUI() {
         try {
@@ -46,21 +51,16 @@ public class SwingGUI {
             panel = new JPanel();
 
             //设置窗口大小
-            frame.setSize(360, 150 + 60);
+            frame.setSize(375, 235);
 
             //下边的这句话，如果这么写的话，窗口关闭，springboot项目就会关掉，使用dispose则不会
             //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.dispose(); //如果写这句可实现窗口关闭，springboot项目仍运行
 
-            panel.setLayout(null);
-
-            // 创建 JLabel
-//            JLabel startLabel = new JLabel("程序正在加载中...");
-//            startLabel.setBounds(10, 20, 120, 25);
-//            panel.add(startLabel);
             // 添加面板
             frame.add(panel);
-
+            placeComponents(panel);
+            createTextArea();
             //居中
             frame.setLocationRelativeTo(null);
 
@@ -130,74 +130,62 @@ public class SwingGUI {
         }
     }
 
-    public JTextArea createTextArea() {
+    public void createTextArea() {
         textArea = new JTextArea();
-        textArea.setBounds(10, 10, 330, 50);
-        textArea.setVisible(true);
-        textArea.setLineWrap(true);
+//        textArea.setLineWrap(true);
         textArea.setEditable(false);
         textArea.setFont(new Font("宋体", Font.PLAIN, 12));
-        textArea.append("欢迎使用超级架子鼓IO板虚拟程序！\n");
-
-
-//        JScrollPane scroll=new JScrollPane(textArea);
-//        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-//        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-//        scroll.setVisible(true);
-        panel.add(textArea);
-        frame.repaint();
-        return textArea;
+//        textArea.setWrapStyleWord(true);
+        textArea.append("-欢迎使用超级架子鼓IO板虚拟程序-\n");
+        scroll = new JScrollPane();
+        scroll.getViewport().add(textArea);
+        scroll.setBounds(140, 10, 210, 180);
+        panel.add(scroll);
     }
 
     public void appendText(String text) {
-        textArea.append(text + "\n");
-        textArea.selectAll();
+        textArea.append("-"+text);
+        textArea.append("\n");
+        scroll.getVerticalScrollBar().setValue(scroll.getVerticalScrollBar().getMaximum());
     }
 
     public void placeComponents(JPanel panel) {
-
         /* 布局部分我们这边不多做介绍
          * 这边设置布局为 null
          */
         panel.setLayout(null);
 
         // 创建 JLabel
-        JLabel userLabel = new JLabel("请输入MIDI设备名称:");
-        /* 这个方法定义了组件的位置。
-         * setBounds(x, y, width, height)
-         * x 和 y 指定左上角的新位置，由 width 和 height 指定新的大小。
-         */
-        userLabel.setBounds(10, 20 + 60, 120, 25);
+        JLabel userLabel = new JLabel("超级架子鼓");
+        userLabel.setBounds(10, 10, 120, 25);
+        userLabel.setFont(new Font("宋体", Font.BOLD, 20));
         panel.add(userLabel);
 
-        /*
-         * 创建文本域用于用户输入
-         */
+        // 创建 JLabel
+        JLabel sexyLabel = new JLabel("        --SexyChan");
+        sexyLabel.setBounds(10, 30, 120, 25);
+        sexyLabel.setFont(new Font("宋体", Font.PLAIN, 12));
+        panel.add(sexyLabel);
+
+        // 创建 JLabel
+        JLabel midiName = new JLabel("输入MIDI设备名称:");
+        midiName.setBounds(10, 30 + 20 + 10, 120, 25);
+        panel.add(midiName);
+
+        //创建文本域用于用户输入
         JTextField midiPortText = new JTextField(20);
-        midiPortText.setBounds(140, 20 + 60, 165, 25);
+        midiPortText.setBounds(10, 20 + 25 + 10 + 20 + 10, 120, 25);
         midiPortText.setText(device);
         panel.add(midiPortText);
 
-        // 输入密码的文本域
-//        JLabel passwordLabel = new JLabel("Password:");
-//        passwordLabel.setBounds(10, 50, 80, 25);
-//        panel.add(passwordLabel);
-
-        /*
-         *这个类似用于输入的文本域
-         * 但是输入的信息会以点号代替，用于包含密码的安全性
-         */
-//        JPasswordField passwordText = new JPasswordField(20);
-//        passwordText.setBounds(100, 50, 165, 25);
-//        panel.add(passwordText);
-
         // 创建登录按钮
-        JButton connect = new JButton("连接");
-        connect.setBounds(85, 65 + 60, 80, 25);
+        connect = new JButton("连接");
+        connect.setBounds(30, 20 + 25 + 25 + 10 + 25 + 20, 80, 25);
+        connect.setEnabled(false);
         panel.add(connect);
 
         JButton disconnect = new JButton("断开");
-        disconnect.setBounds(185, 65 + 60, 80, 25);
+        disconnect.setBounds(30, 20 + 25 + 25 + 25 + 10 + 10 + 25 + 15, 80, 25);
         disconnect.setEnabled(false);
         panel.add(disconnect);
 
@@ -236,5 +224,9 @@ public class SwingGUI {
 
     public JTextArea getTextArea() {
         return textArea;
+    }
+
+    public void setConnectButtonEnable() {
+        connect.setEnabled(true);
     }
 }

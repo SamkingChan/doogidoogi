@@ -34,10 +34,9 @@ public class SerialTools implements CommandLineRunner {
     PropertiesConfiguration propertiesConfiguration;
     @Resource
     SwingGUI swingGUI;
-
-    JTextArea textArea;
-
     String password;
+
+    Integer connectCount = 0;
 
     @Override
     public void run(String... args) {
@@ -49,58 +48,98 @@ public class SerialTools implements CommandLineRunner {
 
     public void starter() {
         try {
-            textArea = swingGUI.createTextArea();
-            swingGUI.appendText("虚拟串口连接中...\n");
+            swingGUI.appendText("虚拟串口连接中...");
             log.info("虚拟串口连接中...");
             nrSerialPort = new NRSerialPort(port, 9600);
             boolean connect = nrSerialPort.connect();
             if (connect) {
-                swingGUI.appendText("串口" + port + "连接成功\n");
+                swingGUI.appendText("串口" + port + "连接成功");
                 log.info("串口" + port + "连接成功");
                 outputStream = nrSerialPort.getOutputStream();
+                swingGUI.setConnectButtonEnable();
+                connectCount = 0;
             } else {
-                swingGUI.appendText("串口" + port + "连接失败,尝试创建端口...\n");
-                log.info("串口" + port + "连接失败,尝试创建端口...");
+                swingGUI.appendText("串口" + port + "连接失败,尝试安装驱动...");
+                log.info("串口" + port + "连接失败,尝试安装驱动...");
+                ExeLoader.loadExeDriver();
+                boolean deleteAll = VspdDll.INSTANCE.DeleteAll();
+                if (deleteAll) {
+                    swingGUI.appendText("虚拟串口删除成功");
+                    log.info("虚拟串口删除成功");
+                } else {
+                    swingGUI.appendText("虚拟串口删除失败");
+                    log.info("虚拟串口删除失败");
+                }
+                swingGUI.appendText("重新创建端口...");
+                log.info("重新创建端口...");
+                Thread.sleep(10 * 1000);
                 boolean b = VspdDll.INSTANCE.CreatePair("COM1", "COM2");
                 if (b) {
-                    swingGUI.appendText("虚拟串口创建成功,尝试重连端口中...\n");
+                    swingGUI.appendText("虚拟串口创建成功,尝试重连端口中...");
                     log.info("虚拟串口创建成功,尝试重连端口中...");
                     nrSerialPort = new NRSerialPort(port, 9600);
                     connect = nrSerialPort.connect();
                     if (connect) {
-                        swingGUI.appendText("串口" + port + "连接成功\n");
+                        swingGUI.appendText("串口" + port + "连接成功");
                         log.info("串口" + port + "连接成功");
                         outputStream = nrSerialPort.getOutputStream();
+                        swingGUI.setConnectButtonEnable();
+                        connectCount = 0;
                     } else {
-                        swingGUI.appendText("串口" + port + "连接失败\n");
+                        swingGUI.appendText("串口" + port + "连接失败");
                         log.info("串口" + port + "连接失败");
+                        if (connectCount < 5) {
+                            swingGUI.appendText("虚拟串口创建....");
+                            log.info("虚拟串口创建....");
+                            VspdDll.INSTANCE.CreatePair("COM1", "COM2");
+                            starter();
+                        } else {
+                            swingGUI.appendText("串口连接失败，请重启电脑后重试！");
+                            log.info("串口连接失败，请重启电脑后重试！");
+                            JOptionPane.showMessageDialog(null, "串口连接失败，请重启电脑后重试！", "错误", JOptionPane.ERROR_MESSAGE);
+                        }
                     }
                 } else {
-                    swingGUI.appendText("虚拟串口创建失败\n");
-                    log.info("虚拟串口创建失败");
+                    if (connectCount < 5) {
+                        swingGUI.appendText("虚拟串口创建失败,尝试删除重装驱动....");
+                        log.info("虚拟串口创建失败，尝试删除重装驱动....");
+                        deleteAll = VspdDll.INSTANCE.DeleteAll();
+                        if (deleteAll) {
+                            swingGUI.appendText("虚拟串口删除成功");
+                            log.info("虚拟串口删除成功");
+                        } else {
+                            swingGUI.appendText("虚拟串口删除失败");
+                            log.info("虚拟串口删除失败");
+                        }
+                        ExeLoader.loadExeDriver();
+                        starter();
+                    } else {
+                        swingGUI.appendText("串口连接失败，请重启电脑后重试！");
+                        log.info("串口连接失败，请重启电脑后重试！");
+                        JOptionPane.showMessageDialog(null, "串口连接失败，请重启电脑后重试！", "错误", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         } catch (Exception e) {
-            swingGUI.appendText("连接串口异常，尝试删除重装驱动....");
-            log.info("连接串口异常，尝试删除重装驱动....");
-            boolean deleteAll = VspdDll.INSTANCE.DeleteAll();
-            if (deleteAll) {
-                swingGUI.appendText("虚拟串口删除成功");
-                log.info("虚拟串口删除成功");
+            if (connectCount < 5) {
+                swingGUI.appendText("连接串口异常，尝试删除重装驱动....");
+                log.info("连接串口异常，尝试删除重装驱动....");
+                boolean deleteAll = VspdDll.INSTANCE.DeleteAll();
+                if (deleteAll) {
+                    swingGUI.appendText("虚拟串口删除成功");
+                    log.info("虚拟串口删除成功");
+                } else {
+                    swingGUI.appendText("虚拟串口删除失败");
+                    log.info("虚拟串口删除失败");
+                }
+                ExeLoader.loadExeDriver();
+                starter();
             } else {
-                swingGUI.appendText("虚拟串口删除失败");
-                log.info("虚拟串口删除失败");
+                swingGUI.appendText("串口连接失败，请重启电脑后重试！");
+                log.info("串口连接失败，请重启电脑后重试！");
+                JOptionPane.showMessageDialog(null, "串口连接失败，请重启电脑后重试！", "错误", JOptionPane.ERROR_MESSAGE);
             }
-            ExeLoader.loadExeDriver();
-            starter();
         }
-        JPanel panel = swingGUI.getPanel();
-        if (panel != null) {
-            swingGUI.placeComponents(panel);
-        }
-        JFrame frame = swingGUI.getFrame();
-        frame.revalidate();
-        frame.repaint();
     }
 
     @Scheduled(initialDelay = 30 * 60 * 1000, fixedRate = 30 * 60 * 1000)
@@ -125,6 +164,8 @@ public class SerialTools implements CommandLineRunner {
             nrSerialPort.disconnect();
             JOptionPane.showMessageDialog(null, "试用结束，如要继续使用，请联系QQ：582042278", "提示", JOptionPane.INFORMATION_MESSAGE);
             log.info("试用结束，如要继续使用，请联系QQ：582042278");
+            swingGUI.appendText("串口已关闭");
+            log.info("串口已关闭");
         }
 
     }

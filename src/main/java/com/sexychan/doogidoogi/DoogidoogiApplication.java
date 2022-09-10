@@ -1,6 +1,7 @@
 package com.sexychan.doogidoogi;
 
 import com.sexychan.doogidoogi.utils.SwingGUI;
+import com.sexychan.doogidoogi.utils.view.ConfigFrame;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
